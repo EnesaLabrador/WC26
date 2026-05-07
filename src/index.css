@@ -62,6 +62,27 @@ body {
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/wc-bg.png');
+  background-repeat: no-repeat;
+  background-position: center 80px;
+  background-size: min(70vw, 420px);
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  body::before {
+    background-size: min(50vw, 500px);
+    opacity: 0.08;
+  }
 }
 
 .app {
@@ -160,11 +181,13 @@ body {
   margin-bottom: 2rem;
 }
 
-.auth-emoji {
-  display: inline-block;
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+.auth-logo-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
   animation: bounce 2s ease infinite;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
 @keyframes bounce {
@@ -361,10 +384,11 @@ body {
   gap: 0.75rem;
 }
 
-.header-icon {
-  font-size: 1.75rem;
-  display: flex;
-  align-items: center;
+.header-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .header-brand h1 {

@@ -45,8 +45,8 @@ export default function Auth() {
       
       <div className="auth-card">
         <div className="auth-logo">
-          <span className="auth-emoji">🏆</span>
-          <h1>Álbum Panini 2026</h1>
+          <img src="/icon.png" alt="FWC 2026" className="auth-logo-img" />
+          <h1>Álbum FWC Panini 2026</h1>
           <p className="auth-subtitle">FIFA World Cup · USA · Canadá · México</p>
         </div>
 

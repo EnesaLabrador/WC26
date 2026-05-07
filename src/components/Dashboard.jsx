@@ -116,9 +116,9 @@ export default function Dashboard() {
     <div className="dashboard">
       <header className="dashboard-header">
         <div className="header-brand">
-          <span className="header-icon">🏆</span>
+          <img src="/icon.png" alt="FWC 2026" className="header-logo-img" />
           <div>
-            <h1>Álbum Panini 2026</h1>
+            <h1>Álbum FWC Panini 2026</h1>
             <span className="user-email">{user?.email}</span>
           </div>
         </div>
