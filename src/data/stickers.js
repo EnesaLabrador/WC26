@@ -85,8 +85,8 @@ for (let i = 1; i <= 19; i++) {
   })
 }
 
-// Especiales CC: CC1 a CC14
-for (let i = 1; i <= 14; i++) {
+// Especiales CC: CC1 a CC12
+for (let i = 1; i <= 12; i++) {
   stickers.push({
     code: `CC${i}`,
     groupCode: 'CC',
