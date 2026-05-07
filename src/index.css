@@ -71,18 +71,16 @@ body::before {
   inset: 0;
   background-image: url('/wc-bg.png');
   background-repeat: no-repeat;
-  background-position: center 80px;
-  background-size: min(70vw, 420px);
-  opacity: 0.06;
+  background-position: center;
+  background-size: cover;
+  opacity: 0.05;
   pointer-events: none;
   z-index: 0;
 }
 
-@media (min-width: 768px) {
-  body::before {
-    background-size: min(50vw, 500px);
-    opacity: 0.08;
-  }
+.app {
+  position: relative;
+  z-index: 1;
 }
 
 .app {
