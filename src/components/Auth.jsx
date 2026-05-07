@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+
+const STORAGE_KEY = 'wc26_remember_email'
 
 export default function Auth() {
   const [email, setEmail] = useState('')
@@ -7,6 +9,15 @@ export default function Auth() {
   const [mode, setMode] = useState('login')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      setEmail(saved)
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,6 +31,11 @@ export default function Auth() {
           password,
         })
         if (error) throw error
+        if (rememberMe) {
+          localStorage.setItem(STORAGE_KEY, email)
+        } else {
+          localStorage.removeItem(STORAGE_KEY)
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -75,6 +91,18 @@ export default function Auth() {
             />
           </div>
           
+          {mode === 'login' && (
+            <label className="remember-row">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span className="checkmark"></span>
+              <span className="remember-text">Recordarme</span>
+            </label>
+          )}
+
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? (
               <span className="btn-loading">

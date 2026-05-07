@@ -249,6 +249,60 @@ body::before {
   box-shadow: 0 0 0 3px var(--color-primary-glow);
 }
 
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+  margin-top: -0.25rem;
+}
+
+.remember-row input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.remember-row input:checked + .checkmark {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkmark::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform var(--transition-fast);
+  margin-bottom: 2px;
+}
+
+.remember-row input:checked + .checkmark::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.remember-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
 .btn-primary {
   padding: 0.875rem;
   border-radius: var(--radius-md);
