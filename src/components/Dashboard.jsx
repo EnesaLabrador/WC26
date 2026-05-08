@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { stickers, groupList, totalStickers } from '../data/stickers'
+import AlbumView from './AlbumView'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -9,6 +10,19 @@ export default function Dashboard() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [selectedGroup, setSelectedGroup] = useState('all')
+  const [viewMode, setViewMode] = useState('list')
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 900px)')
+    setIsDesktop(mq.matches)
+    const handler = (e) => {
+      setIsDesktop(e.matches)
+      if (!e.matches) setViewMode('list')
+    }
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -113,7 +127,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard">
+    <div className={`dashboard ${viewMode === 'album' ? 'album-mode' : ''}`}>
       <header className="dashboard-header">
         <div className="header-brand">
           <img src="/icon.png" alt="FWC 2026" className="header-logo-img" />
@@ -122,13 +136,45 @@ export default function Dashboard() {
             <span className="user-email">{user?.email}</span>
           </div>
         </div>
-        <button onClick={logout} className="btn-logout" title="Cerrar sesión">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
+        <div className="header-actions">
+          {isDesktop && (
+            <div className="view-toggle">
+              <button
+                className={viewMode === 'list' ? 'active' : ''}
+                onClick={() => setViewMode('list')}
+                title="Vista lista"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                Lista
+              </button>
+              <button
+                className={viewMode === 'album' ? 'active' : ''}
+                onClick={() => setViewMode('album')}
+                title="Vista álbum"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                Álbum
+              </button>
+            </div>
+          )}
+            <button onClick={logout} className="btn-logout" title="Cerrar sesión">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
       </header>
 
       <section className="progress-section">
@@ -178,102 +224,133 @@ export default function Dashboard() {
         </div>
 
         <div className="filter-row">
-          <div className="filter-pills">
-            <button
-              className={filter === 'all' ? 'active' : ''}
-              onClick={() => setFilter('all')}
-            >
-              Todos
-            </button>
-            <button
-              className={filter === 'owned' ? 'active' : ''}
-              onClick={() => setFilter('owned')}
-            >
-              ✓ Tengo
-            </button>
-            <button
-              className={filter === 'missing' ? 'active' : ''}
-              onClick={() => setFilter('missing')}
-            >
-              ○ Faltan
-            </button>
-          </div>
+          {viewMode === 'list' ? (
+            <>
+              <div className="filter-pills">
+                <button
+                  className={filter === 'all' ? 'active' : ''}
+                  onClick={() => setFilter('all')}
+                >
+                  Todos
+                </button>
+                <button
+                  className={filter === 'owned' ? 'active' : ''}
+                  onClick={() => setFilter('owned')}
+                >
+                  ✓ Tengo
+                </button>
+                <button
+                  className={filter === 'missing' ? 'active' : ''}
+                  onClick={() => setFilter('missing')}
+                >
+                  ○ Faltan
+                </button>
+              </div>
 
-          <select
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            className="group-select"
-          >
-            <option value="all">🌍 Todos los países</option>
-            {groupList.map((g) => (
-              <option key={g.code} value={g.code}>
-                {g.flag} {g.name}
-              </option>
-            ))}
-          </select>
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="group-select"
+              >
+                <option value="all">🌍 Todos los países</option>
+                {groupList.map((g) => (
+                  <option key={g.code} value={g.code}>
+                    {g.flag} {g.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <div className="album-country-strip">
+              <button
+                className={`album-country-chip ${selectedGroup === 'all' ? 'active' : ''}`}
+                onClick={() => setSelectedGroup('all')}
+              >
+                🌍 Inicio
+              </button>
+              {groupList.map((g) => (
+                <button
+                  key={g.code}
+                  className={`album-country-chip ${selectedGroup === g.code ? 'active' : ''}`}
+                  onClick={() => setSelectedGroup(g.code)}
+                >
+                  {g.flag} {g.code}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="sticker-sections">
-        {groupedStickers.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-icon">🔍</div>
-            <p>No se encontraron cromos con esos filtros.</p>
-            <button className="btn-reset" onClick={() => { setFilter('all'); setSearch(''); setSelectedGroup('all'); }}>
-              Limpiar filtros
-            </button>
-          </div>
-        )}
-
-        {groupedStickers.map(({ group, stickers: groupStickers }) => {
-          const groupOwned = groupStickers.filter((s) => ownedStickers.has(s.code)).length
-          const groupTotal = groupStickers.length
-          const groupPercent = Math.round((groupOwned / groupTotal) * 100)
-          
-          return (
-            <div key={group.groupCode} className="sticker-group">
-              <div className="group-header">
-                <div className="group-info">
-                  <span className="group-flag">{group.flag}</span>
-                  <h2 className="group-name">{group.groupName}</h2>
-                </div>
-                <div className="group-meta">
-                  <div className="group-progress-bar">
-                    <div 
-                      className="group-progress-fill" 
-                      style={{ width: `${groupPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="group-count">{groupOwned}/{groupTotal}</span>
-                </div>
-              </div>
-              <div className="sticker-grid">
-                {groupStickers.map((sticker) => {
-                  const owned = ownedStickers.has(sticker.code)
-                  return (
-                    <button
-                      key={sticker.code}
-                      className={`sticker-card ${owned ? 'owned' : ''}`}
-                      onClick={() => toggleSticker(sticker.code)}
-                      title={`${sticker.groupName} - ${sticker.code}`}
-                      aria-pressed={owned}
-                    >
-                      <span className="sticker-code">{sticker.code}</span>
-                      {owned && (
-                        <div className="sticker-owned-badge">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+      {viewMode === 'list' ? (
+        <section className="sticker-sections">
+          {groupedStickers.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">🔍</div>
+              <p>No se encontraron cromos con esos filtros.</p>
+              <button className="btn-reset" onClick={() => { setFilter('all'); setSearch(''); setSelectedGroup('all'); }}>
+                Limpiar filtros
+              </button>
             </div>
-          )
-        })}
-      </section>
+          )}
+
+          {groupedStickers.map(({ group, stickers: groupStickers }) => {
+            const groupOwned = groupStickers.filter((s) => ownedStickers.has(s.code)).length
+            const groupTotal = groupStickers.length
+            const groupPercent = Math.round((groupOwned / groupTotal) * 100)
+            
+            return (
+              <div key={group.groupCode} className="sticker-group">
+                <div className="group-header">
+                  <div className="group-info">
+                    <span className="group-flag">{group.flag}</span>
+                    <h2 className="group-name">{group.groupName}</h2>
+                  </div>
+                  <div className="group-meta">
+                    <div className="group-progress-bar">
+                      <div 
+                        className="group-progress-fill" 
+                        style={{ width: `${groupPercent}%` }}
+                      ></div>
+                    </div>
+                    <span className="group-count">{groupOwned}/{groupTotal}</span>
+                  </div>
+                </div>
+                <div className="sticker-grid">
+                  {groupStickers.map((sticker) => {
+                    const owned = ownedStickers.has(sticker.code)
+                    return (
+                      <button
+                        key={sticker.code}
+                        className={`sticker-card ${owned ? 'owned' : ''}`}
+                        onClick={() => toggleSticker(sticker.code)}
+                        title={`${sticker.groupName} - ${sticker.code}`}
+                        aria-pressed={owned}
+                      >
+                        <span className="sticker-code">{sticker.code}</span>
+                        {owned && (
+                          <div className="sticker-owned-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </section>
+      ) : (
+        <AlbumView
+          stickers={stickers}
+          ownedStickers={ownedStickers}
+          toggleSticker={toggleSticker}
+          selectedGroup={selectedGroup}
+        />
+      )}
     </div>
   )
 }
