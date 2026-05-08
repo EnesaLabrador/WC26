@@ -1,9 +1,31 @@
-export default function FlagImage({ flagCode, alt, size = 20, className = '' }) {
+export default function FlagImage({ flagCode, logo, alt, size = 20, className = '' }) {
+  if (logo) {
+    return (
+      <img
+        src={logo}
+        alt={alt || ''}
+        className={`flag-image ${className}`}
+        width={size}
+        height={size}
+        loading="lazy"
+        style={{ display: 'inline-block', objectFit: 'contain' }}
+      />
+    )
+  }
+
   if (!flagCode) {
     return (
       <span
         className={`flag-fallback ${className}`}
-        style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.65 }}
+        style={{
+          width: size,
+          height: size,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: size * 0.65,
+          fontWeight: 700,
+        }}
         title={alt}
       >
         {alt?.[0] || ''}

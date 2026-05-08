@@ -73,6 +73,7 @@ stickers.push({
   groupCode: 'FWC',
   groupName: 'FIFA World Cup',
   flagCode: null,
+  logo: '/logos/fwc.png',
   number: 0,
 })
 for (let i = 1; i <= 19; i++) {
@@ -81,6 +82,7 @@ for (let i = 1; i <= 19; i++) {
     groupCode: 'FWC',
     groupName: 'FIFA World Cup',
     flagCode: null,
+    logo: '/logos/fwc.png',
     number: i,
   })
 }
@@ -92,14 +94,15 @@ for (let i = 1; i <= 12; i++) {
     groupCode: 'CC',
     groupName: 'Coca-Cola',
     flagCode: null,
+    logo: '/logos/cocacola.png',
     number: i,
   })
 }
 
 export const groupList = [
   ...countryGroups,
-  { code: 'FWC', name: 'FIFA World Cup', flagCode: null },
-  { code: 'CC', name: 'Coca-Cola', flagCode: null },
+  { code: 'FWC', name: 'FIFA World Cup', flagCode: null, logo: '/logos/fwc.png' },
+  { code: 'CC', name: 'Coca-Cola', flagCode: null, logo: '/logos/cocacola.png' },
 ]
 
 export const totalStickers = stickers.length

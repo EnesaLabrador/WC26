@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { stickers, groupList, totalStickers } from '../data/stickers'
 import AlbumView from './AlbumView'
 import FlagImage from './FlagImage'
+import CustomDropdown from './CustomDropdown'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -248,18 +249,26 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <select
+              <CustomDropdown
                 value={selectedGroup}
-                onChange={(e) => setSelectedGroup(e.target.value)}
-                className="group-select"
-              >
-                <option value="all">Todos los países</option>
-                {groupList.map((g) => (
-                  <option key={g.code} value={g.code}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedGroup}
+                placeholder="Seleccionar país..."
+                options={[
+                  {
+                    value: 'all',
+                    label: 'Todos los países',
+                    flagCode: null,
+                    logo: null,
+                    isGlobal: true,
+                  },
+                  ...groupList.map((g) => ({
+                    value: g.code,
+                    label: g.name,
+                    flagCode: g.flagCode,
+                    logo: g.logo,
+                  })),
+                ]}
+              />
             </>
           ) : (
             <div className="album-country-strip">
@@ -275,7 +284,7 @@ export default function Dashboard() {
                   className={`album-country-chip ${selectedGroup === g.code ? 'active' : ''}`}
                   onClick={() => setSelectedGroup(g.code)}
                 >
-                  <FlagImage flagCode={g.flagCode} alt={g.name} size={16} />
+                  <FlagImage flagCode={g.flagCode} logo={g.logo} alt={g.name} size={16} />
                   {g.code}
                 </button>
               ))}
