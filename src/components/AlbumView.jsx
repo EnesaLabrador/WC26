@@ -2,6 +2,18 @@ import { useState, useRef, useEffect, useMemo, forwardRef } from 'react'
 import HTMLFlipBook from 'react-pageflip'
 import FlagImage from './FlagImage'
 
+const AlbumCover = forwardRef(function AlbumCover(_, ref) {
+  return (
+    <div className="album-sheet album-cover" ref={ref}>
+      <img
+        src="/album-cover.png"
+        alt="Portada Álbum FWC 2026"
+        className="album-cover-image"
+      />
+    </div>
+  )
+})
+
 const AlbumPage = forwardRef(function AlbumPage(
   { page, ownedStickers, toggleSticker },
   ref
@@ -90,7 +102,7 @@ export default function AlbumView({ stickers, ownedStickers, toggleSticker, sele
     if (selectedGroup && selectedGroup !== 'all' && bookRef.current) {
       const pageIndex = pageIndexByGroup.get(selectedGroup)
       if (pageIndex !== undefined) {
-        bookRef.current.pageFlip().turnToPage(pageIndex)
+            bookRef.current.pageFlip().turnToPage(pageIndex + 1)
       }
     }
   }, [selectedGroup, pageIndexByGroup])
@@ -152,7 +164,7 @@ export default function AlbumView({ stickers, ownedStickers, toggleSticker, sele
             width={dims.pageW}
             height={dims.pageH}
             size="stretch"
-            showCover={false}
+            showCover={true}
             usePortrait={false}
             mobileScrollSupport={false}
             useMouseEvents={true}
@@ -162,6 +174,7 @@ export default function AlbumView({ stickers, ownedStickers, toggleSticker, sele
             style={{}}
             className="album-flipbook"
           >
+            <AlbumCover />
             {pages.map((page, idx) => (
               <AlbumPage
                 key={idx}
