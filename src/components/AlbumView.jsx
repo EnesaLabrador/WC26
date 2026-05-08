@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, forwardRef } from 'react'
 import HTMLFlipBook from 'react-pageflip'
+import FlagImage from './FlagImage'
 
 const AlbumPage = forwardRef(function AlbumPage(
   { page, ownedStickers, toggleSticker },
@@ -24,7 +25,7 @@ const AlbumPage = forwardRef(function AlbumPage(
       <div className="album-sheet-inner">
         <div className="album-sheet-header">
           <div className="album-sheet-title">
-            <span className="album-sheet-flag">{group.flag}</span>
+            <FlagImage flagCode={group.flagCode} alt={group.groupName} size={18} />
             <h3>{group.groupName}</h3>
           </div>
           <span className="album-sheet-count">

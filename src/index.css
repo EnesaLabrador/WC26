@@ -778,9 +778,8 @@ body::before {
   gap: 0.625rem;
 }
 
-.group-flag {
-  font-size: 1.25rem;
-  line-height: 1;
+.group-info .flag-image {
+  flex-shrink: 0;
 }
 
 .group-name {
@@ -1195,9 +1194,8 @@ body::before {
   gap: 0.4rem;
 }
 
-.album-sheet-flag {
-  font-size: 1.1rem;
-  line-height: 1;
+.album-sheet-title .flag-image {
+  flex-shrink: 0;
 }
 
 .album-sheet-title h3 {

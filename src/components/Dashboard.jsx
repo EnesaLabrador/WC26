@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { stickers, groupList, totalStickers } from '../data/stickers'
 import AlbumView from './AlbumView'
+import FlagImage from './FlagImage'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -252,10 +253,10 @@ export default function Dashboard() {
                 onChange={(e) => setSelectedGroup(e.target.value)}
                 className="group-select"
               >
-                <option value="all">🌍 Todos los países</option>
+                <option value="all">Todos los países</option>
                 {groupList.map((g) => (
                   <option key={g.code} value={g.code}>
-                    {g.flag} {g.name}
+                    {g.name}
                   </option>
                 ))}
               </select>
@@ -266,7 +267,7 @@ export default function Dashboard() {
                 className={`album-country-chip ${selectedGroup === 'all' ? 'active' : ''}`}
                 onClick={() => setSelectedGroup('all')}
               >
-                🌍 Inicio
+                Inicio
               </button>
               {groupList.map((g) => (
                 <button
@@ -274,7 +275,8 @@ export default function Dashboard() {
                   className={`album-country-chip ${selectedGroup === g.code ? 'active' : ''}`}
                   onClick={() => setSelectedGroup(g.code)}
                 >
-                  {g.flag} {g.code}
+                  <FlagImage flagCode={g.flagCode} alt={g.name} size={16} />
+                  {g.code}
                 </button>
               ))}
             </div>
@@ -303,7 +305,7 @@ export default function Dashboard() {
               <div key={group.groupCode} className="sticker-group">
                 <div className="group-header">
                   <div className="group-info">
-                    <span className="group-flag">{group.flag}</span>
+                    <FlagImage flagCode={group.flagCode} alt={group.groupName} size={20} />
                     <h2 className="group-name">{group.groupName}</h2>
                   </div>
                   <div className="group-meta">
