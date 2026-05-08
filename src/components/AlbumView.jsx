@@ -25,7 +25,7 @@ const AlbumPage = forwardRef(function AlbumPage(
       <div className="album-sheet-inner">
         <div className="album-sheet-header">
           <div className="album-sheet-title">
-            <FlagImage flagCode={group.flagCode} logo={group.logo} alt={group.groupName} size={18} />
+            <FlagImage flagCode={group.flagCode} logo={group.logo} alt={group.groupName} size={24} />
             <h3>{group.groupName}</h3>
           </div>
           <span className="album-sheet-count">

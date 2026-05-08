@@ -314,7 +314,7 @@ export default function Dashboard() {
               <div key={group.groupCode} className="sticker-group">
                 <div className="group-header">
                   <div className="group-info">
-                    <FlagImage flagCode={group.flagCode} alt={group.groupName} size={20} />
+                    <FlagImage flagCode={group.flagCode} logo={group.logo} alt={group.groupName} size={28} />
                     <h2 className="group-name">{group.groupName}</h2>
                   </div>
                   <div className="group-meta">
