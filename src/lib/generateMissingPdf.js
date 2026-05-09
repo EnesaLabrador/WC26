@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf'
 
-async function loadImageBase64(url) {
+async function loadImageAsBase64(url) {
   try {
     const res = await fetch(url)
     const blob = await res.blob()
@@ -14,13 +14,47 @@ async function loadImageBase64(url) {
   }
 }
 
-async function loadSvgString(url) {
+async function svgToPngDataUrl(svgUrl, w = 40, h = 30) {
   try {
-    const res = await fetch(url)
-    return res.text()
+    const svgText = await fetch(svgUrl).then((r) => r.text())
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+
+    const img = new Image()
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+      img.src = url
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = w * 4
+    canvas.height = h * 4
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    URL.revokeObjectURL(url)
+    return canvas.toDataURL('image/png')
   } catch {
     return null
   }
+}
+
+function countWrappedLines(codes, maxWidth, doc) {
+  let lines = 1
+  let currentWidth = 0
+  const gap = doc.getTextWidth('  ')
+
+  codes.forEach((code) => {
+    const codeW = doc.getTextWidth(code)
+    if (currentWidth > 0 && currentWidth + gap + codeW > maxWidth) {
+      lines++
+      currentWidth = codeW
+    } else {
+      currentWidth = currentWidth > 0 ? currentWidth + gap + codeW : codeW
+    }
+  })
+
+  return lines
 }
 
 export default async function generateMissingPdf(stickers, ownedStickers) {
@@ -31,7 +65,7 @@ export default async function generateMissingPdf(stickers, ownedStickers) {
     return
   }
 
-  // Agrupar por grupo
+  // Agrupar
   const groups = new Map()
   missing.forEach((s) => {
     if (!groups.has(s.groupCode)) {
@@ -49,185 +83,181 @@ export default async function generateMissingPdf(stickers, ownedStickers) {
   const groupList = Array.from(groups.values())
 
   // Ordenar: países primero, luego FWC, luego CC
-  const order = ['FWC', 'CC']
+  const specialOrder = ['FWC', 'CC']
   groupList.sort((a, b) => {
-    const ai = order.indexOf(a.groupCode)
-    const bi = order.indexOf(b.groupCode)
+    const ai = specialOrder.indexOf(a.groupCode)
+    const bi = specialOrder.indexOf(b.groupCode)
     if (ai >= 0 && bi >= 0) return ai - bi
     if (ai >= 0) return 1
     if (bi >= 0) return -1
     return a.groupName.localeCompare(b.groupName)
   })
 
-  // Cargar imágenes necesarias
+  // Precargar imágenes
   const imageCache = {}
-  const loadPromises = groupList.map(async (g) => {
-    if (g.logo) {
-      if (!imageCache[g.logo]) {
-        imageCache[g.logo] = await loadImageBase64(g.logo)
-      }
-    } else if (g.flagCode) {
-      const url = `/flags/${g.flagCode}.svg`
-      if (!imageCache[url]) {
-        imageCache[url] = await loadSvgString(url)
-      }
-    }
-  })
-  await Promise.all(loadPromises)
+  imageCache['app'] = await loadImageAsBase64('/icon.png')
 
-  // También cargar logo de la app
-  const appLogo = await loadImageBase64('/icon.png')
+  await Promise.all(
+    groupList.map(async (g) => {
+      if (g.logo) {
+        imageCache[g.groupCode] = await loadImageAsBase64(g.logo)
+      } else if (g.flagCode) {
+        imageCache[g.groupCode] = await svgToPngDataUrl(
+          `/flags/${g.flagCode}.svg`,
+          40,
+          30
+        )
+      }
+    })
+  )
 
-  // Crear PDF A4 vertical
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const pageW = 210
-  const pageH = 297
+  // PDF A4 horizontal
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const pageW = 297
+  const pageH = 210
   const margin = 10
   const contentW = pageW - margin * 2
 
-  // Calcular tamaño de fuente basado en cantidad de grupos
-  let countryFontSize = 7
-  let codeFontSize = 6
-  let lineHeight = 3.8
-  let groupGap = 1.8
+  // === CABECERA ===
+  let y = margin + 2
 
-  const totalGroups = groupList.length
-  if (totalGroups > 40) {
-    countryFontSize = 6
-    codeFontSize = 5
-    lineHeight = 3.2
-    groupGap = 1.2
-  } else if (totalGroups > 28) {
-    countryFontSize = 6.5
-    codeFontSize = 5.5
-    lineHeight = 3.5
-    groupGap = 1.5
-  }
-
-  // Cabecera
-  let y = margin + 4
-
-  if (appLogo) {
-    doc.addImage(appLogo, 'PNG', margin, y - 2, 8, 8)
+  if (imageCache['app']) {
+    doc.addImage(imageCache['app'], 'PNG', margin, y - 1, 7, 7)
   }
 
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(14)
+  doc.setFontSize(16)
   doc.setTextColor(22, 30, 45)
-  doc.text('Cromos faltantes', margin + 11, y + 3)
+  doc.text('Cromos faltantes', margin + 10, y + 4)
 
-  doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100, 100, 100)
+  doc.setFontSize(8)
+  doc.setTextColor(120, 120, 120)
   const today = new Date().toLocaleDateString('es-ES')
-  doc.text(today, pageW - margin, y + 3, { align: 'right' })
+  doc.text(today, pageW - margin, y + 4, { align: 'right' })
 
-  y += 8
+  y += 10
 
-  // Progreso
+  // Stats
   const total = stickers.length
   const missingCount = missing.length
-  const percent = Math.round(((total - missingCount) / total) * 100)
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(22, 30, 45)
-  doc.text(`Faltan ${missingCount} / ${total} cromos  (${percent}%)`, margin, y)
+  const ownedCount = total - missingCount
+  const percent = Math.round((ownedCount / total) * 100)
 
-  // Barra de progreso
-  const barW = 50
-  const barH = 2.5
-  const barX = margin + 65
-  doc.setDrawColor(200, 200, 200)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.setTextColor(80, 80, 80)
+  doc.text(`Faltan ${missingCount} / ${total} cromos   (${percent}%)`, margin, y)
+
+  // Barra progreso
+  const barW = 60
+  const barH = 3
+  const barX = margin + 80
   doc.setFillColor(230, 230, 230)
-  doc.roundedRect(barX, y - 3, barW, barH, 1, 1, 'FD')
+  doc.roundedRect(barX, y - 2.5, barW, barH, 1, 1, 'F')
   doc.setFillColor(22, 163, 74)
-  doc.roundedRect(barX, y - 3, barW * (percent / 100), barH, 1, 1, 'F')
+  doc.roundedRect(barX, y - 2.5, barW * (percent / 100), barH, 1, 1, 'F')
 
   y += 6
 
-  // Línea separadora
+  // Separador
   doc.setDrawColor(200, 200, 200)
   doc.setLineWidth(0.3)
   doc.line(margin, y, pageW - margin, y)
   y += 4
 
-  // Layout de 3 columnas
-  const cols = 3
-  const colGap = 4
-  const colWidth = (contentW - colGap * (cols - 1)) / cols
-  const colXs = [margin, margin + colWidth + colGap, margin + (colWidth + colGap) * 2]
+  // === CONTENIDO ===
+  const startY = y
   const maxY = pageH - margin
+  const availableH = maxY - startY
 
-  // Distribuir grupos en columnas balanceadas
-  const colGroups = [[], [], []]
-  groupList.forEach((g, i) => {
-    colGroups[i % cols].push(g)
+  const cols = 4
+  const colGap = 3
+  const colWidth = (contentW - colGap * (cols - 1)) / cols
+  const colXs = Array.from(
+    { length: cols },
+    (_, i) => margin + i * (colWidth + colGap)
+  )
+
+  const headerFontSize = 7
+  const codeFontSize = 6
+  const lineHeight = 3.2
+  const headerH = 4.5
+  const groupGap = 2.5
+
+  // Medir altura real de cada grupo con wrapping exacto
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(codeFontSize)
+  const codeMaxW = colWidth - 2
+
+  const measuredGroups = groupList.map((g) => {
+    const lines = countWrappedLines(g.codes, codeMaxW, doc)
+    const height = headerH + lines * lineHeight + groupGap
+    return { group: g, height }
   })
 
-  // Mejor distribución: ir añadiendo a la columna más corta
-  const colHeights = [0, 0, 0]
-  const finalColGroups = [[], [], []]
-  groupList.forEach((g) => {
-    const shortest = colHeights.indexOf(Math.min(...colHeights))
-    finalColGroups[shortest].push(g)
-    colHeights[shortest] += lineHeight * 2 + groupGap + 1
+  // Distribuir en columnas balanceadas (más corta primero)
+  const colGroups = Array.from({ length: cols }, () => [])
+  const colHeights = Array(cols).fill(0)
+
+  measuredGroups.forEach((mg) => {
+    const shortestIdx = colHeights.indexOf(Math.min(...colHeights))
+    colGroups[shortestIdx].push(mg)
+    colHeights[shortestIdx] += mg.height
   })
 
-  const colYs = [y, y, y]
-
-  finalColGroups.forEach((groups, colIdx) => {
+  // Dibujar columnas
+  colGroups.forEach((groups, colIdx) => {
     const x = colXs[colIdx]
-    let cy = colYs[colIdx]
+    let cy = startY
 
-    groups.forEach((g) => {
-      // Verificar si cabe, si no, reducir más
-      if (cy + lineHeight * 2 > maxY) {
-        return
-      }
+    groups.forEach(({ group: g, height }) => {
+      // Si se pasa de página, truncar (no debería pasar con 4 cols)
+      if (cy + height > maxY) return
+
+      const imgSize = 4
+      const imgH = 3
 
       // Imagen
-      const imgSize = 3.5
-      if (g.logo && imageCache[g.logo]) {
-        doc.addImage(imageCache[g.logo], 'PNG', x, cy - 1, imgSize, imgSize)
-      } else if (g.flagCode && imageCache[`/flags/${g.flagCode}.svg`]) {
-        try {
-          doc.addSvgAsImage(imageCache[`/flags/${g.flagCode}.svg`], x, cy - 1, imgSize, imgSize * 0.75)
-        } catch {
-          // Fallback si SVG no carga
-        }
+      if (imageCache[g.groupCode]) {
+        doc.addImage(imageCache[g.groupCode], 'PNG', x, cy - 0.5, imgSize, imgH)
       }
 
-      // Nombre del grupo
+      // Nombre grupo
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(countryFontSize)
-      doc.setTextColor(22, 30, 45)
-      doc.text(`${g.groupCode}  ${g.groupName}`, x + imgSize + 1.5, cy + 1.2)
+      doc.setFontSize(headerFontSize)
+      doc.setTextColor(30, 30, 30)
+      doc.text(`${g.groupCode}  ${g.groupName}`, x + imgSize + 1.5, cy + 2)
 
-      cy += lineHeight
+      cy += headerH
 
-      // Códigos faltantes
+      // Códigos faltantes (wrapping real)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(codeFontSize)
       doc.setTextColor(80, 80, 80)
 
-      const codesText = g.codes.join('  ')
-      const maxTextW = colWidth - 2
-      const textW = doc.getTextWidth(codesText)
+      let currentLine = ''
+      let lineCount = 0
+      const gapStr = '  '
 
-      if (textW <= maxTextW) {
-        doc.text(codesText, x, cy)
-      } else {
-        // Wrap simple por número de códigos
-        const maxChars = Math.floor((maxTextW / textW) * codesText.length)
-        const breakIdx = codesText.lastIndexOf(' ', maxChars)
-        const line1 = breakIdx > 0 ? codesText.slice(0, breakIdx) : codesText.slice(0, maxChars)
-        const line2 = breakIdx > 0 ? codesText.slice(breakIdx + 1) : codesText.slice(maxChars)
-        doc.text(line1, x, cy)
-        cy += lineHeight - 0.5
-        if (line2) doc.text(line2, x, cy)
+      g.codes.forEach((code, idx) => {
+        const prefix = idx > 0 ? gapStr : ''
+        const testLine = currentLine + prefix + code
+        if (idx > 0 && doc.getTextWidth(testLine) > codeMaxW) {
+          doc.text(currentLine, x, cy + lineCount * lineHeight)
+          lineCount++
+          currentLine = code
+        } else {
+          currentLine = testLine
+        }
+      })
+
+      if (currentLine) {
+        doc.text(currentLine, x, cy + lineCount * lineHeight)
+        lineCount++
       }
 
-      cy += groupGap
+      cy += lineCount * lineHeight + groupGap
     })
   })
 
