@@ -3,12 +3,12 @@ import { supabase } from '../lib/supabase'
 
 const STORAGE_KEY = 'wc26_remember_email'
 
-export default function Auth() {
+export default function Auth({ initialMode, onRecoveryComplete }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState(initialMode || 'login')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -76,7 +76,9 @@ export default function Auth() {
         setMessage('Contraseña actualizada correctamente.')
         setNewPassword('')
         setConfirmPassword('')
-        setTimeout(() => {
+        setTimeout(async () => {
+          await supabase.auth.signOut()
+          if (onRecoveryComplete) onRecoveryComplete()
           setMode('login')
           setMessage('')
         }, 2000)

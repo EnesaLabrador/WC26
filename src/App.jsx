@@ -6,6 +6,7 @@ import './index.css'
 
 function App() {
   const [session, setSession] = useState(null)
+  const [recoveryMode, setRecoveryMode] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -13,13 +14,27 @@ function App() {
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          setRecoveryMode(true)
+        }
         setSession(session)
       }
     )
 
     return () => listener.subscription.unsubscribe()
   }, [])
+
+  if (recoveryMode) {
+    return (
+      <div className="app">
+        <Auth
+          initialMode="reset"
+          onRecoveryComplete={() => setRecoveryMode(false)}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="app">
