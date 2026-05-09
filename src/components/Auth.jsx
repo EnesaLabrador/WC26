@@ -58,7 +58,7 @@ export default function Auth() {
         setMessage('Cuenta creada. Revisa tu email para confirmar.')
       } else if (mode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: 'https://wc-26-livid.vercel.app/',
         })
         if (error) throw error
         setMessage('Enlace enviado. Revisa tu email.')
