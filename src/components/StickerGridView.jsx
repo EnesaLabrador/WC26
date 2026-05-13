@@ -12,8 +12,10 @@ export default function StickerGridView({
   title = 'Progreso del álbum',
   showPdf = false,
   viewMode: externalViewMode,
+  initialFilter = 'all',
+  lockFilter = false,
 }) {
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState(initialFilter)
   const [search, setSearch] = useState('')
   const [selectedGroup, setSelectedGroup] = useState('all')
 
@@ -139,26 +141,28 @@ export default function StickerGridView({
         <div className="filter-row">
           {viewMode === 'list' ? (
             <>
-              <div className="filter-pills">
-                <button
-                  className={filter === 'all' ? 'active' : ''}
-                  onClick={() => setFilter('all')}
-                >
-                  Todos
-                </button>
-                <button
-                  className={filter === 'owned' ? 'active' : ''}
-                  onClick={() => setFilter('owned')}
-                >
-                  ✓ Tengo
-                </button>
-                <button
-                  className={filter === 'missing' ? 'active' : ''}
-                  onClick={() => setFilter('missing')}
-                >
-                  ○ Faltan
-                </button>
-              </div>
+              {!lockFilter && (
+                <div className="filter-pills">
+                  <button
+                    className={filter === 'all' ? 'active' : ''}
+                    onClick={() => setFilter('all')}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    className={filter === 'owned' ? 'active' : ''}
+                    onClick={() => setFilter('owned')}
+                  >
+                    ✓ Tengo
+                  </button>
+                  <button
+                    className={filter === 'missing' ? 'active' : ''}
+                    onClick={() => setFilter('missing')}
+                  >
+                    ○ Faltan
+                  </button>
+                </div>
+              )}
 
               <CustomDropdown
                 value={selectedGroup}

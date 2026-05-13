@@ -1289,6 +1289,10 @@ body::before {
     padding: 0.75rem 0.5rem;
     font-size: 0.85rem;
   }
+
+  .friends-tab {
+    padding: 0 0.75rem 0.75rem;
+  }
 }
 
 /* Album View */

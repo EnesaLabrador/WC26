@@ -130,7 +130,7 @@ export default function FriendsPanel({ onSelectFriend, selectedFriend, onRequest
           <ul className="requests-list">
             {pendingRequests.map((req) => (
               <li key={req.id}>
-                <span>{req.email}</span>
+                <span className="request-email">{req.email}</span>
                 <div className="request-actions">
                   <button
                     className="btn-accept"

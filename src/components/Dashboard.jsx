@@ -359,9 +359,10 @@ export default function Dashboard() {
                   ownedStickers={friendStickers}
                   toggleSticker={() => {}}
                   readOnly={true}
-                  viewMode={viewMode}
                   title={`Álbum de ${selectedFriend.email}`}
                   showPdf={false}
+                  initialFilter="missing"
+                  lockFilter={true}
                 />
               )}
             </div>
