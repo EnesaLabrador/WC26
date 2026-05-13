@@ -1117,6 +1117,90 @@ body::before {
   color: var(--color-text-secondary);
 }
 
+/* Tab Switcher (Mi Álbum / Amigos) */
+.tab-switcher {
+  display: flex;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.tab-switcher button {
+  padding: 0.5rem 0.875rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tab-switcher button.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.tab-switcher button:not(.active):hover {
+  color: var(--color-text-secondary);
+}
+
+/* Friends Tab Layout */
+.friends-tab {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.friend-collection {
+  margin-top: 1.5rem;
+}
+
+.friend-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-back:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.friend-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.loading.small {
+  min-height: auto;
+  padding: 3rem 0;
+  background: transparent;
+}
+
+.loading.small .spinner {
+  width: 32px;
+  height: 32px;
+}
+
 /* Album View */
 .album-view {
   position: relative;

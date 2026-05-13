@@ -1,0 +1,152 @@
+.friends-panel {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  margin-bottom: 1.5rem;
+}
+
+.panel-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.add-friend-form {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.add-friend-form input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  outline: none;
+}
+
+.add-friend-form input:focus {
+  border-color: var(--color-primary);
+}
+
+.add-friend-form button {
+  padding: 0.75rem 1.25rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-friend-form button:hover {
+  background: var(--color-primary-light);
+}
+
+.add-friend-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.friend-message {
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  color: var(--color-accent);
+}
+
+.requests-section {
+  margin-bottom: 1.5rem;
+}
+
+.requests-section h3,
+.friends-list-section h3 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.requests-list,
+.friends-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.requests-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-bg-elevated);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+}
+
+.request-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-accept,
+.btn-reject {
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-accept {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-accept:hover {
+  background: var(--color-primary-light);
+}
+
+.btn-reject {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+}
+
+.btn-reject:hover {
+  color: var(--color-text);
+}
+
+.friends-list li button {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.friends-list li.active button {
+  border-color: var(--color-primary);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.friends-list li button:hover {
+  background: var(--color-bg-hover);
+}
+
+.empty-friends {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
