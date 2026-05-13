@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import './FriendsPanel.css'
 
-export default function FriendsPanel({ onSelectFriend, selectedFriend }) {
+export default function FriendsPanel({ onSelectFriend, selectedFriend, onRequestsChanged }) {
   const [friends, setFriends] = useState([])
   const [pendingRequests, setPendingRequests] = useState([])
   const [email, setEmail] = useState('')
@@ -75,6 +75,7 @@ export default function FriendsPanel({ onSelectFriend, selectedFriend }) {
         if (data.message.includes('aceptada')) {
           loadFriends()
         }
+        onRequestsChanged?.()
       }
     } catch (err) {
       setMessage(err.message)
@@ -88,6 +89,7 @@ export default function FriendsPanel({ onSelectFriend, selectedFriend }) {
       await supabase.rpc('accept_friend_request', { request_id: requestId })
       loadPendingRequests()
       loadFriends()
+      onRequestsChanged?.()
     } catch (err) {
       setMessage(err.message)
     }
@@ -97,6 +99,7 @@ export default function FriendsPanel({ onSelectFriend, selectedFriend }) {
     try {
       await supabase.rpc('reject_friend_request', { request_id: requestId })
       loadPendingRequests()
+      onRequestsChanged?.()
     } catch (err) {
       setMessage(err.message)
     }

@@ -13,7 +13,10 @@ export default function Dashboard() {
   const [friendStickers, setFriendStickers] = useState(new Set())
   const [friendLoading, setFriendLoading] = useState(false)
   const [viewMode, setViewMode] = useState('list')
+  const [pendingCount, setPendingCount] = useState(0)
+  const [toast, setToast] = useState(null)
 
+  // Desktop detection
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 900px)')
     setIsDesktop(mq.matches)
@@ -26,22 +29,89 @@ export default function Dashboard() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
+  // Auth listener
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) loadStickers(user.id)
+      if (user) {
+        loadStickers(user.id)
+        loadPendingCount(user.id)
+      }
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         const currentUser = session?.user ?? null
         setUser(currentUser)
-        if (currentUser) loadStickers(currentUser.id)
+        if (currentUser) {
+          loadStickers(currentUser.id)
+          loadPendingCount(currentUser.id)
+        }
       }
     )
 
     return () => listener.subscription.unsubscribe()
   }, [])
+
+  // Refresh pending count on window focus
+  useEffect(() => {
+    const onFocus = () => {
+      if (user?.id) loadPendingCount(user.id)
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [user])
+
+  // Realtime subscriptions
+  useEffect(() => {
+    if (!user?.id) return
+
+    const channel = supabase
+      .channel('friends-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'friend_requests',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          setPendingCount((prev) => prev + 1)
+          setToast('Nueva solicitud de amistad')
+          setTimeout(() => setToast(null), 4000)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'friend_requests',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          loadPendingCount(user.id)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'friendships',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          loadPendingCount(user.id)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user])
 
   const loadStickers = async (userId) => {
     setLoading(true)
@@ -54,6 +124,18 @@ export default function Dashboard() {
       setOwnedStickers(new Set(data.map((d) => d.sticker_code)))
     }
     setLoading(false)
+  }
+
+  const loadPendingCount = async (userId) => {
+    const { count, error } = await supabase
+      .from('friend_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('receiver_id', userId)
+      .eq('status', 'pending')
+
+    if (!error) {
+      setPendingCount(count ?? 0)
+    }
   }
 
   const toggleSticker = async (code) => {
@@ -103,6 +185,10 @@ export default function Dashboard() {
     setFriendStickers(new Set())
   }
 
+  const handleRequestsChanged = () => {
+    if (user?.id) loadPendingCount(user.id)
+  }
+
   if (loading) {
     return (
       <div className="loading">
@@ -123,23 +209,6 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="header-actions">
-          <div className="tab-switcher">
-            <button
-              className={activeTab === 'collection' ? 'active' : ''}
-              onClick={() => {
-                setActiveTab('collection')
-                setSelectedFriend(null)
-              }}
-            >
-              Mi Álbum
-            </button>
-            <button
-              className={activeTab === 'friends' ? 'active' : ''}
-              onClick={() => setActiveTab('friends')}
-            >
-              Amigos
-            </button>
-          </div>
           {activeTab === 'collection' && isDesktop && (
             <div className="view-toggle">
               <button
@@ -211,6 +280,33 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <nav className="main-tabs">
+        <button
+          className={activeTab === 'collection' ? 'active' : ''}
+          onClick={() => {
+            setActiveTab('collection')
+            setSelectedFriend(null)
+          }}
+        >
+          Mi Álbum
+        </button>
+        <button
+          className={activeTab === 'friends' ? 'active' : ''}
+          onClick={() => setActiveTab('friends')}
+        >
+          Amigos
+          {pendingCount > 0 && (
+            <span className="tab-badge">{pendingCount}</span>
+          )}
+        </button>
+      </nav>
+
+      {toast && (
+        <div className="toast-notification" onClick={() => setToast(null)}>
+          {toast}
+        </div>
+      )}
+
       {activeTab === 'collection' && (
         <StickerGridView
           ownedStickers={ownedStickers}
@@ -226,15 +322,13 @@ export default function Dashboard() {
           <FriendsPanel
             onSelectFriend={handleSelectFriend}
             selectedFriend={selectedFriend}
+            onRequestsChanged={handleRequestsChanged}
           />
 
           {selectedFriend && (
             <div className="friend-collection">
               <div className="friend-header-bar">
-                <button
-                  className="btn-back"
-                  onClick={handleBackToMine}
-                >
+                <button className="btn-back" onClick={handleBackToMine}>
                   <svg
                     width="16"
                     height="16"
