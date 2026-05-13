@@ -14,6 +14,9 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- Borrar política previa si existe
+drop policy if exists "Profiles are viewable by everyone" on public.profiles;
+
 -- Permitir que cualquiera vea perfiles (necesario para buscar amigos,
 -- aunque la lógica sensible se hace vía RPC).
 create policy "Profiles are viewable by everyone" on public.profiles
@@ -57,6 +60,11 @@ create table if not exists public.friend_requests (
 
 alter table public.friend_requests enable row level security;
 
+-- Borrar políticas previas si existen
+drop policy if exists "Users can view their own friend requests" on public.friend_requests;
+drop policy if exists "Users can send friend requests" on public.friend_requests;
+drop policy if exists "Receivers can update friend requests" on public.friend_requests;
+
 -- Políticas de solicitudes
 create policy "Users can view their own friend requests" on public.friend_requests
   for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
@@ -78,6 +86,9 @@ create table if not exists public.friendships (
 
 alter table public.friendships enable row level security;
 
+-- Borrar política previa si existe
+drop policy if exists "Users can view their own friendships" on public.friendships;
+
 create policy "Users can view their own friendships" on public.friendships
   for select using (auth.uid() = user_id);
 
@@ -96,6 +107,11 @@ $$ language plpgsql security definer;
 -- 6. Políticas RLS para user_stickers
 -- ============================================
 alter table public.user_stickers enable row level security;
+
+-- Borrar políticas previas si existen para evitar duplicados
+drop policy if exists "Users can view own and friends stickers" on public.user_stickers;
+drop policy if exists "Users can insert own stickers" on public.user_stickers;
+drop policy if exists "Users can delete own stickers" on public.user_stickers;
 
 -- Permitir ver cromos propios y de amigos
 create policy "Users can view own and friends stickers" on public.user_stickers
