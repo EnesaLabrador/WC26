@@ -50,6 +50,9 @@ export default function Auth({ initialMode, onRecoveryComplete }) {
           localStorage.removeItem(STORAGE_KEY)
         }
       } else if (mode === 'register') {
+        if (password.length < 6) {
+          throw new Error('La contraseña debe tener al menos 6 caracteres.')
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -131,7 +134,7 @@ export default function Auth({ initialMode, onRecoveryComplete }) {
             />
           </div>
           
-          {mode === 'login' && (
+          {(mode === 'login' || mode === 'register') && (
             <div className="input-group">
               <label htmlFor="password">Contraseña</label>
               <input
