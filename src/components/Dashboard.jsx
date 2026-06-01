@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import StickerGridView from './StickerGridView'
+import DuplicatesView from './DuplicatesView'
 import FriendsPanel from './FriendsPanel'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
   const [ownedStickers, setOwnedStickers] = useState(new Set())
+  const [duplicateStickers, setDuplicateStickers] = useState(new Map())
   const [loading, setLoading] = useState(true)
   const [isDesktop, setIsDesktop] = useState(false)
   const [activeTab, setActiveTab] = useState('collection')
   const [selectedFriend, setSelectedFriend] = useState(null)
   const [friendStickers, setFriendStickers] = useState(new Set())
+  const [friendDuplicates, setFriendDuplicates] = useState(new Map())
   const [friendLoading, setFriendLoading] = useState(false)
+  const [friendViewTab, setFriendViewTab] = useState('album')
   const [viewMode, setViewMode] = useState('list')
   const [pendingCount, setPendingCount] = useState(0)
   const [toast, setToast] = useState(null)
@@ -36,6 +40,7 @@ export default function Dashboard() {
       if (user) {
         loadStickers(user.id)
         loadPendingCount(user.id)
+        loadDuplicates(user.id)
       }
     })
 
@@ -46,6 +51,7 @@ export default function Dashboard() {
         if (currentUser) {
           loadStickers(currentUser.id)
           loadPendingCount(currentUser.id)
+          loadDuplicates(currentUser.id)
         }
       }
     )
@@ -138,6 +144,45 @@ export default function Dashboard() {
     }
   }
 
+  const loadDuplicates = async (userId) => {
+    const { data, error } = await supabase
+      .from('user_duplicate_stickers')
+      .select('sticker_code, quantity')
+      .eq('user_id', userId)
+
+    if (!error && data) {
+      const map = new Map()
+      data.forEach((d) => map.set(d.sticker_code, d.quantity))
+      setDuplicateStickers(map)
+    }
+  }
+
+  const updateDuplicateQuantity = async (code, delta) => {
+    if (!user) return
+    const current = duplicateStickers.get(code) || 0
+    const next = Math.max(0, current + delta)
+
+    if (next === 0) {
+      await supabase
+        .from('user_duplicate_stickers')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('sticker_code', code)
+    } else {
+      await supabase.from('user_duplicate_stickers').upsert(
+        { user_id: user.id, sticker_code: code, quantity: next },
+        { onConflict: 'user_id, sticker_code' }
+      )
+    }
+
+    setDuplicateStickers((prev) => {
+      const nextMap = new Map(prev)
+      if (next === 0) nextMap.delete(code)
+      else nextMap.set(code, next)
+      return nextMap
+    })
+  }
+
   const toggleSticker = async (code) => {
     if (!user) return
     const isOwned = ownedStickers.has(code)
@@ -168,21 +213,36 @@ export default function Dashboard() {
 
   const handleSelectFriend = async (friend) => {
     setSelectedFriend(friend)
+    setFriendViewTab('album')
     setFriendLoading(true)
-    const { data, error } = await supabase
-      .from('user_stickers')
-      .select('sticker_code')
-      .eq('user_id', friend.id)
 
-    if (!error && data) {
-      setFriendStickers(new Set(data.map((d) => d.sticker_code)))
+    const [stickerRes, dupRes] = await Promise.all([
+      supabase
+        .from('user_stickers')
+        .select('sticker_code')
+        .eq('user_id', friend.id),
+      supabase
+        .from('user_duplicate_stickers')
+        .select('sticker_code, quantity')
+        .eq('user_id', friend.id),
+    ])
+
+    if (!stickerRes.error && stickerRes.data) {
+      setFriendStickers(new Set(stickerRes.data.map((d) => d.sticker_code)))
     }
+    if (!dupRes.error && dupRes.data) {
+      const map = new Map()
+      dupRes.data.forEach((d) => map.set(d.sticker_code, d.quantity))
+      setFriendDuplicates(map)
+    }
+
     setFriendLoading(false)
   }
 
   const handleBackToMine = () => {
     setSelectedFriend(null)
     setFriendStickers(new Set())
+    setFriendDuplicates(new Map())
   }
 
   const handleRequestsChanged = () => {
@@ -291,6 +351,15 @@ export default function Dashboard() {
           Mi Álbum
         </button>
         <button
+          className={activeTab === 'duplicates' ? 'active' : ''}
+          onClick={() => {
+            setActiveTab('duplicates')
+            setSelectedFriend(null)
+          }}
+        >
+          Repetidos
+        </button>
+        <button
           className={activeTab === 'friends' ? 'active' : ''}
           onClick={() => setActiveTab('friends')}
         >
@@ -314,6 +383,14 @@ export default function Dashboard() {
           viewMode={viewMode}
           title="Progreso del álbum"
           showPdf={true}
+        />
+      )}
+
+      {activeTab === 'duplicates' && (
+        <DuplicatesView
+          duplicateMap={duplicateStickers}
+          onChangeQuantity={updateDuplicateQuantity}
+          title="Mis repetidos"
         />
       )}
 
@@ -349,12 +426,27 @@ export default function Dashboard() {
                 </span>
               </div>
 
+              <div className="friend-view-tabs">
+                <button
+                  className={friendViewTab === 'album' ? 'active' : ''}
+                  onClick={() => setFriendViewTab('album')}
+                >
+                  Álbum
+                </button>
+                <button
+                  className={friendViewTab === 'duplicates' ? 'active' : ''}
+                  onClick={() => setFriendViewTab('duplicates')}
+                >
+                  Repetidos
+                </button>
+              </div>
+
               {friendLoading ? (
                 <div className="loading small">
                   <div className="spinner"></div>
-                  <p>Cargando álbum de tu amigo...</p>
+                  <p>Cargando colección de tu amigo...</p>
                 </div>
-              ) : (
+              ) : friendViewTab === 'album' ? (
                 <StickerGridView
                   ownedStickers={friendStickers}
                   toggleSticker={() => {}}
@@ -363,6 +455,13 @@ export default function Dashboard() {
                   showPdf={false}
                   initialFilter="missing"
                   lockFilter={true}
+                />
+              ) : (
+                <DuplicatesView
+                  duplicateMap={friendDuplicates}
+                  title={`Repetidos de ${selectedFriend.email}`}
+                  readOnly={true}
+                  hideEmpty={true}
                 />
               )}
             </div>
