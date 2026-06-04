@@ -1729,6 +1729,12 @@ body::before {
   padding: 0.5rem 0.25rem 0.4rem;
 }
 
+.sticker-card.duplicate-card .sticker-code {
+  padding-right: 1.6rem;
+  width: 100%;
+  text-align: center;
+}
+
 .duplicate-controls {
   display: flex;
   align-items: center;
@@ -1780,6 +1786,22 @@ body::before {
 .sticker-card.duplicate-card.has-duplicates {
   border-color: var(--color-accent);
   box-shadow: 0 0 12px rgba(251, 191, 36, 0.15);
+}
+
+.sticker-card.duplicate-card.readonly-duplicate-card {
+  justify-content: center;
+  min-height: 64px;
+  padding: 0.5rem;
+  gap: 0.35rem;
+}
+
+.sticker-card.duplicate-card.readonly-duplicate-card .sticker-code {
+  padding-right: 0;
+}
+
+.sticker-card.duplicate-card.readonly-duplicate-card .duplicate-qty-badge {
+  position: static;
+  margin-top: 0;
 }
 
 .duplicate-qty-badge {

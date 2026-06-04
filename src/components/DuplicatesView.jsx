@@ -159,13 +159,13 @@ export default function DuplicatesView({
                   return (
                     <div
                       key={sticker.code}
-                      className={`sticker-card duplicate-card ${qty > 0 ? 'has-duplicates' : ''}`}
+                      className={`sticker-card duplicate-card ${readOnly ? 'readonly-duplicate-card' : ''} ${qty > 0 ? 'has-duplicates' : ''}`}
                     >
                       <span className="sticker-code">{sticker.code}</span>
                       {qty > 0 && (
                         <span className="duplicate-qty-badge">{qty}</span>
                       )}
-                      {!readOnly ? (
+                      {!readOnly && (
                         <div className="duplicate-controls">
                           <button
                             className="btn-dup"
@@ -188,11 +188,7 @@ export default function DuplicatesView({
                             +
                           </button>
                         </div>
-                      ) : qty > 0 ? (
-                        <div className="duplicate-controls readonly">
-                          <span className="dup-count">{qty}</span>
-                        </div>
-                      ) : null}
+                      )}
                     </div>
                   )
                 })}
